@@ -1,4 +1,4 @@
-# twitter_search
+# twitter_search (Sample app)
 
 Fast Search twitter without Login.
 
