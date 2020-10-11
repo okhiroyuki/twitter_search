@@ -1,6 +1,8 @@
 # twitter_search
 
-Search twitter with no login
+Fast Search twitter without Login.
+
+<img src="./sample.gif" width="200">
 
 ## Getting Started
 
