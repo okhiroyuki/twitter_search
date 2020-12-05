@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:firebase_admob/firebase_admob.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'ad_manager.dart';
@@ -26,8 +25,8 @@ class _SearchAppBarState extends State<SearchAppBar> {
 
     FirebaseAdMob.instance.initialize(appId:AdManager.appId);
     myBanner = BannerAd(
-      adUnitId: BannerAd.testAdUnitId, // テスト用
-      // adUnitId: AdManager.bannerAdUnitId, // 本番用
+      // adUnitId: BannerAd.testAdUnitId, // テスト用
+      adUnitId: AdManager.bannerAdUnitId, // 本番用
       size: AdSize.smartBanner, // 目的のサイズに合わせる
       listener: (MobileAdEvent event) {
         print("BannerAd event is $event");
