@@ -45,3 +45,4 @@ app.*.map.json
 
 *.jks
 google-services.json
+keystore.properties
