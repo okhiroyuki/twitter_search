@@ -1,6 +1,10 @@
 import 'dart:io';
+import 'package:firebase_admob/firebase_admob.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+
+import 'ad_manager.dart';
 
 class SearchAppBar extends StatefulWidget {
   @override
@@ -8,6 +12,7 @@ class SearchAppBar extends StatefulWidget {
 }
 
 class _SearchAppBarState extends State<SearchAppBar> {
+  BannerAd myBanner;
   final TextEditingController _textEditingController = new TextEditingController();
   WebViewController controller;
   String _text = '';
@@ -18,11 +23,26 @@ class _SearchAppBarState extends State<SearchAppBar> {
     super.initState();
     if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
     _textEditingController.addListener(_printLatestValue);
+
+    FirebaseAdMob.instance.initialize(appId:AdManager.appId);
+    myBanner = BannerAd(
+      adUnitId: BannerAd.testAdUnitId, // テスト用
+      // adUnitId: AdManager.bannerAdUnitId, // 本番用
+      size: AdSize.smartBanner, // 目的のサイズに合わせる
+      listener: (MobileAdEvent event) {
+        print("BannerAd event is $event");
+      },
+    );
+    // 表示
+    myBanner
+      ..load()
+      ..show(anchorType: AnchorType.bottom);
   }
 
   @override
   void dispose() {
     _textEditingController.dispose();
+    myBanner?.dispose();
     super.dispose();
   }
 
@@ -38,13 +58,17 @@ class _SearchAppBarState extends State<SearchAppBar> {
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: new AppBar(
+
+    return WillPopScope(
+      onWillPop: () => _exitApp(context),
+      child: Scaffold(
+        appBar: new AppBar(
           centerTitle: true,
           title: new TextField(
             controller: _textEditingController,
             style: new TextStyle(
               color: Colors.white,
+              fontSize: 24,
             ),
             decoration: new InputDecoration(
               prefixIcon: new Icon(Icons.search, color: Colors.white),
@@ -62,28 +86,48 @@ class _SearchAppBarState extends State<SearchAppBar> {
                 });
               }, ),
           ]
-      ),
-      body: Center(
-        child: WebView(
-          initialUrl: 'https://mobile.twitter.com',
-          javascriptMode: JavascriptMode.unrestricted,
-          onWebViewCreated: (WebViewController webViewController) {
-              controller = webViewController;
-          },
         ),
-      ),
+        body: Center(
+          child: WebView(
+            javascriptMode: JavascriptMode.unrestricted,
+            onWebViewCreated: (WebViewController webViewController) {
+              controller = webViewController;
+            },
+            onPageFinished: (url) async {
+              if(url.contains("https://mobile.twitter.com/search?q=")){
+                // String jsCode = await rootBundle.loadString('assets/app.js');
+                // await controller.evaluateJavascript(jsCode);
+              }
+              print(url);
+            },
+          ),
+        ),
+      )
     );
   }
 
   void _submission(String v) {
     if(_text.length == 0) return;
     _textEditingController.clear();
-    setState(() {
+    setState(() async {
       if(_text.length > 0){
         var url = 'https://mobile.twitter.com/search?q=' + _text + '&src=typed_query';
         controller.loadUrl(url);
       }
       _text = '';
     });
+  }
+
+  Future<bool> _exitApp(BuildContext context) async {
+    if (await controller.canGoBack()) {
+      print("onwill goback");
+      controller.goBack();
+    } else {
+      print("no goback");
+      Scaffold.of(context).showSnackBar(
+        const SnackBar(content: Text("No back history item")),
+      );
+      return Future.value(false);
+    }
   }
 }

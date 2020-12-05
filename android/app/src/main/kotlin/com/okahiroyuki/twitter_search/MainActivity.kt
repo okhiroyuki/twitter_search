@@ -1,4 +1,4 @@
-package com.okahiroyuki.twitter_search
+package com.okhiroyuki.twitter_search
 
 import io.flutter.embedding.android.FlutterActivity
 
