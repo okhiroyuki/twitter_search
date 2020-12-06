@@ -1,12 +1,12 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_admob/firebase_admob.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
+import 'package:share/share.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'ad_manager.dart';
-
-final bool kDebugMode = true;
 
 class SearchAppBar extends StatefulWidget {
   @override
@@ -15,9 +15,11 @@ class SearchAppBar extends StatefulWidget {
 
 class _SearchAppBarState extends State<SearchAppBar> {
   BannerAd myBanner;
+  FocusNode _focus = new FocusNode();
   final TextEditingController _textEditingController = new TextEditingController();
   WebViewController controller;
   String _text = '';
+  bool _isVisible = false;
   Widget appBarTitle = new Text("Twitter Search");
 
   @override
@@ -27,6 +29,11 @@ class _SearchAppBarState extends State<SearchAppBar> {
     _textEditingController.addListener(_printLatestValue);
     _showAdBanner();
     _initCrashlytics();
+    _focus.addListener(_onFocusChange);
+  }
+
+  void _onFocusChange() {
+    debugPrint("Focus: " + _focus.hasFocus.toString());
   }
 
   @override
@@ -37,7 +44,7 @@ class _SearchAppBarState extends State<SearchAppBar> {
   }
 
   void _printLatestValue() {
-    print("入力状況: ${_textEditingController.text}");
+    debugPrint("入力状況: ${_textEditingController.text}");
   }
 
   void _handleText(String e) {
@@ -54,6 +61,7 @@ class _SearchAppBarState extends State<SearchAppBar> {
         appBar: new AppBar(
           centerTitle: true,
           title: new TextField(
+            focusNode: _focus,
             controller: _textEditingController,
             style: new TextStyle(
               color: Colors.white,
@@ -83,14 +91,33 @@ class _SearchAppBarState extends State<SearchAppBar> {
               controller = webViewController;
             },
             onPageFinished: (url) async {
+              debugPrint("onPageFinished: " + url);
               if(url.contains("https://mobile.twitter.com/search?q=")){
                 // String jsCode = await rootBundle.loadString('assets/app.js');
                 // await controller.evaluateJavascript(jsCode);
               }
-              print(url);
+              setState(() {
+                _isVisible = true;
+              });
+            },
+            navigationDelegate: (NavigationRequest request) {
+              // TODO: https://github.com/flutter/flutter/issues/39441
+              debugPrint('allowing navigation to $request');
+              return NavigationDecision.prevent;
             },
           ),
         ),
+        floatingActionButton: new Visibility(
+          visible: _isVisible,
+          child: new FloatingActionButton(
+            child: Icon(Icons.share),
+            backgroundColor: Colors.red,
+            onPressed: () async {
+              Share.share(await controller.currentUrl());
+            },
+
+          ),
+        )
       )
     );
   }
@@ -109,10 +136,10 @@ class _SearchAppBarState extends State<SearchAppBar> {
 
   Future<bool> _exitApp(BuildContext context) async {
     if (await controller.canGoBack()) {
-      print("onwill goback");
+      debugPrint("onwill goback");
       controller.goBack();
     } else {
-      print("no goback");
+      debugPrint("no goback");
       Scaffold.of(context).showSnackBar(
         const SnackBar(content: Text("No back history item")),
       );
@@ -128,6 +155,8 @@ class _SearchAppBarState extends State<SearchAppBar> {
           .setCrashlyticsCollectionEnabled(false);
     }
   }
+
+  
 
   Future<void> _showAdBanner() async {
     FirebaseAdMob.instance.initialize(appId:AdManager.appId);
