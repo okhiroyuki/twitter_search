@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'package:firebase_admob/firebase_admob.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'ad_manager.dart';
+
+final bool kDebugMode = true;
 
 class SearchAppBar extends StatefulWidget {
   @override
@@ -22,20 +25,8 @@ class _SearchAppBarState extends State<SearchAppBar> {
     super.initState();
     if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
     _textEditingController.addListener(_printLatestValue);
-
-    FirebaseAdMob.instance.initialize(appId:AdManager.appId);
-    myBanner = BannerAd(
-      // adUnitId: BannerAd.testAdUnitId, // テスト用
-      adUnitId: AdManager.bannerAdUnitId, // 本番用
-      size: AdSize.smartBanner, // 目的のサイズに合わせる
-      listener: (MobileAdEvent event) {
-        print("BannerAd event is $event");
-      },
-    );
-    // 表示
-    myBanner
-      ..load()
-      ..show(anchorType: AnchorType.bottom);
+    _showAdBanner();
+    _initCrashlytics();
   }
 
   @override
@@ -57,7 +48,6 @@ class _SearchAppBarState extends State<SearchAppBar> {
 
   @override
   Widget build(BuildContext context) {
-
     return WillPopScope(
       onWillPop: () => _exitApp(context),
       child: Scaffold(
@@ -128,5 +118,30 @@ class _SearchAppBarState extends State<SearchAppBar> {
       );
       return Future.value(false);
     }
+  }
+
+  Future<void> _initCrashlytics() async {
+    if (kDebugMode) {
+      // Force disable Crashlytics collection while doing every day development.
+      // Temporarily toggle this to true if you want to test crash reporting in your app.
+      await FirebaseCrashlytics.instance
+          .setCrashlyticsCollectionEnabled(false);
+    }
+  }
+
+  Future<void> _showAdBanner() async {
+    FirebaseAdMob.instance.initialize(appId:AdManager.appId);
+    myBanner = BannerAd(
+      // adUnitId: BannerAd.testAdUnitId, // テスト用
+      adUnitId: AdManager.bannerAdUnitId, // 本番用
+      size: AdSize.smartBanner, // 目的のサイズに合わせる
+      listener: (MobileAdEvent event) {
+        print("BannerAd event is $event");
+      },
+    );
+    // 表示
+    myBanner
+      ..load()
+      ..show(anchorType: AnchorType.bottom);
   }
 }
