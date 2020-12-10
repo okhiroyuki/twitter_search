@@ -11,11 +11,16 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
     // Create the initialization Future outside of `build`:
     final Future<FirebaseApp> _initialization = Firebase.initializeApp();
 
+    return MyWidget(_initialization);
+  }
+
+  MaterialApp MyWidget(Future<FirebaseApp> _initialization){
     return MaterialApp(
       title: 'Twitter Search',
       debugShowCheckedModeBanner: false,
@@ -57,3 +62,5 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+

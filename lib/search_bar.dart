@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_admob/firebase_admob.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
+import 'package:move_to_background/move_to_background.dart';
 import 'package:share/share.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -13,14 +14,22 @@ class SearchAppBar extends StatefulWidget {
   _SearchAppBarState createState() => new _SearchAppBarState();
 }
 
-class _SearchAppBarState extends State<SearchAppBar> {
+class _SearchAppBarState extends State<SearchAppBar> with WidgetsBindingObserver {
   BannerAd myBanner;
   FocusNode _focus = new FocusNode();
   final TextEditingController _textEditingController = new TextEditingController();
   WebViewController controller;
   String _text = '';
   bool _isVisible = false;
+  String _city = '';
   Widget appBarTitle = new Text("Twitter Search");
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if(state == AppLifecycleState.resumed){
+      debugPrint("resume");
+    }
+  }
 
   @override
   void initState() {
@@ -107,17 +116,70 @@ class _SearchAppBarState extends State<SearchAppBar> {
             },
           ),
         ),
-        floatingActionButton: new Visibility(
-          visible: _isVisible,
-          child: new FloatingActionButton(
-            child: Icon(Icons.share),
-            backgroundColor: Colors.red,
-            onPressed: () async {
-              Share.share(await controller.currentUrl());
-            },
-
-          ),
-        )
+        // floatingActionButton: new Visibility(
+        //   visible: _isVisible,
+        //   child: new FloatingActionButton(
+        //     child: Icon(Icons.share),
+        //     backgroundColor: Colors.red,
+        //     onPressed: () async {
+        //       Share.share(await controller.currentUrl());
+        //     },
+        //
+        //   ),
+        // ),
+        // drawer: Drawer(
+        //   child: ListView(
+        //     children: <Widget>[
+        //       DrawerHeader(
+        //         child: Text(
+        //           'My App',
+        //           style: TextStyle(
+        //             fontSize: 24,
+        //             color: Colors.white,
+        //           ),
+        //         ),
+        //         decoration: BoxDecoration(
+        //           color: Colors.blue,
+        //         ),
+        //       ),
+        //       ListTile(
+        //         title: Text('Los Angeles'),
+        //         onTap: () {
+        //           setState(() => _city = 'Los Angeles, CA');
+        //           Navigator.pop(context);
+        //         },
+        //       ),
+        //       ListTile(
+        //         title: Text('Honolulu'),
+        //         onTap: () {
+        //           setState(() => _city = 'Honolulu, HI');
+        //           Navigator.pop(context);
+        //         },
+        //       ),
+        //       ListTile(
+        //         title: Text('Dallas'),
+        //         onTap: () {
+        //           setState(() => _city = 'Dallas, TX');
+        //           Navigator.pop(context);
+        //         },
+        //       ),
+        //       ListTile(
+        //         title: Text('Seattle'),
+        //         onTap: () {
+        //           setState(() => _city = 'Seattle, WA');
+        //           Navigator.pop(context);
+        //         },
+        //       ),
+        //       ListTile(
+        //         title: Text('Tokyo'),
+        //         onTap: () {
+        //           setState(() => _city = 'Tokyo, Japan');
+        //           Navigator.pop(context);
+        //         },
+        //       ),
+        //     ],
+        //   ),
+        // )
       )
     );
   }
@@ -136,13 +198,11 @@ class _SearchAppBarState extends State<SearchAppBar> {
 
   Future<bool> _exitApp(BuildContext context) async {
     if (await controller.canGoBack()) {
-      debugPrint("onwill goback");
+      debugPrint("onWill goback");
       controller.goBack();
     } else {
-      debugPrint("no goback");
-      Scaffold.of(context).showSnackBar(
-        const SnackBar(content: Text("No back history item")),
-      );
+      debugPrint("moveTaskToBack");
+      MoveToBackground.moveTaskToBack();
       return Future.value(false);
     }
   }
