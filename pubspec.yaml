@@ -36,7 +36,7 @@ dependencies:
   flutter_launcher_icons: ^0.8.0
   firebase_crashlytics: ^0.2.4
   share: '>=0.6.4+3 <2.0.0'
-  move_to_background: 1.0.1
+  move_to_background: ^1.0.1
 
 dev_dependencies:
   flutter_test:

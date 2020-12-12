@@ -14,28 +14,20 @@ class SearchAppBar extends StatefulWidget {
   _SearchAppBarState createState() => new _SearchAppBarState();
 }
 
-class _SearchAppBarState extends State<SearchAppBar> with WidgetsBindingObserver {
+class _SearchAppBarState extends State<SearchAppBar> {
   BannerAd myBanner;
   FocusNode _focus = new FocusNode();
   final TextEditingController _textEditingController = new TextEditingController();
   WebViewController controller;
-  String _text = '';
   bool _isVisible = false;
-  String _city = '';
+  bool _isEntry = false;
+  // String _city = '';
   Widget appBarTitle = new Text("Twitter Search");
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if(state == AppLifecycleState.resumed){
-      debugPrint("resume");
-    }
-  }
 
   @override
   void initState() {
     super.initState();
     if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
-    _textEditingController.addListener(_printLatestValue);
     _showAdBanner();
     _initCrashlytics();
     _focus.addListener(_onFocusChange);
@@ -43,6 +35,9 @@ class _SearchAppBarState extends State<SearchAppBar> with WidgetsBindingObserver
 
   void _onFocusChange() {
     debugPrint("Focus: " + _focus.hasFocus.toString());
+    setState(() {
+      _textEditingController.clear();
+    });
   }
 
   @override
@@ -52,13 +47,13 @@ class _SearchAppBarState extends State<SearchAppBar> with WidgetsBindingObserver
     super.dispose();
   }
 
-  void _printLatestValue() {
-    debugPrint("入力状況: ${_textEditingController.text}");
-  }
-
   void _handleText(String e) {
     setState(() {
-      _text = e;
+      if(e.length > 0){
+        _isEntry = true;
+      }else{
+        _isEntry = false;
+      }
     });
   }
 
@@ -69,52 +64,11 @@ class _SearchAppBarState extends State<SearchAppBar> with WidgetsBindingObserver
       child: Scaffold(
         appBar: new AppBar(
           centerTitle: true,
-          title: new TextField(
-            focusNode: _focus,
-            controller: _textEditingController,
-            style: new TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-            ),
-            decoration: new InputDecoration(
-              prefixIcon: new Icon(Icons.search, color: Colors.white),
-            ),
-            onChanged: _handleText,
-            onSubmitted:_submission,
-          ),
-          actions: <Widget>[
-            new IconButton(
-              icon: new Icon(Icons.clear),
-              onPressed:(){
-                _textEditingController.clear();
-                setState(() {
-                  _text = '';
-                });
-              }, ),
-          ]
+          title: _appBarTitle(),
+          actions: _appBarActions()
         ),
         body: Center(
-          child: WebView(
-            javascriptMode: JavascriptMode.unrestricted,
-            onWebViewCreated: (WebViewController webViewController) {
-              controller = webViewController;
-            },
-            onPageFinished: (url) async {
-              debugPrint("onPageFinished: " + url);
-              if(url.contains("https://mobile.twitter.com/search?q=")){
-                // String jsCode = await rootBundle.loadString('assets/app.js');
-                // await controller.evaluateJavascript(jsCode);
-              }
-              setState(() {
-                _isVisible = true;
-              });
-            },
-            navigationDelegate: (NavigationRequest request) {
-              // TODO: https://github.com/flutter/flutter/issues/39441
-              debugPrint('allowing navigation to $request');
-              return NavigationDecision.prevent;
-            },
-          ),
+          child: searchView()
         ),
         // floatingActionButton: new Visibility(
         //   visible: _isVisible,
@@ -122,9 +76,9 @@ class _SearchAppBarState extends State<SearchAppBar> with WidgetsBindingObserver
         //     child: Icon(Icons.share),
         //     backgroundColor: Colors.red,
         //     onPressed: () async {
+        //       debugPrint(await controller.currentUrl());
         //       Share.share(await controller.currentUrl());
         //     },
-        //
         //   ),
         // ),
         // drawer: Drawer(
@@ -184,15 +138,78 @@ class _SearchAppBarState extends State<SearchAppBar> with WidgetsBindingObserver
     );
   }
 
+  TextField _appBarTitle(){
+    return new TextField(
+      focusNode: _focus,
+      controller: _textEditingController,
+      style: new TextStyle(
+        color: Colors.white,
+        fontSize: 24,
+      ),
+      decoration: new InputDecoration(
+        prefixIcon: new Icon(Icons.search, color: Colors.white),
+      ),
+      onChanged: _handleText,
+      onSubmitted:_submission,
+    );
+  }
+
+  List<Widget> _appBarActions(){
+    if(_isEntry){
+      return <Widget>[
+        new IconButton(
+          icon: new Icon(Icons.clear),
+          onPressed:(){
+            setState(() {
+              _isEntry = false;
+            });
+            _textEditingController.clear();
+          },
+        ),
+      ];
+    }else{
+      return <Widget>[
+        new IconButton(
+          icon: new Icon(Icons.list),
+          onPressed:(){
+            debugPrint("list");
+          },
+        ),
+      ];
+    }
+  }
+
+  WebView searchView(){
+    return WebView(
+      javascriptMode: JavascriptMode.unrestricted,
+      onWebViewCreated: (WebViewController webViewController) {
+        controller = webViewController;
+      },
+      onPageFinished: (url) async {
+        debugPrint("onPageFinished: " + url);
+        if(url.contains("https://mobile.twitter.com/search?q=")){
+          // String jsCode = await rootBundle.loadString('assets/app.js');
+          // await controller.evaluateJavascript(jsCode);
+        }
+        setState(() {
+          _isVisible = true;
+        });
+      },
+      navigationDelegate: (NavigationRequest request) {
+        // TODO: https://github.com/flutter/flutter/issues/39441
+        debugPrint('allowing navigation to $request');
+        return NavigationDecision.prevent;
+      },
+    );
+  }
+
   void _submission(String v) {
-    if(_text.length == 0) return;
+    if(v.length == 0) return;
     _textEditingController.clear();
     setState(() async {
-      if(_text.length > 0){
-        var url = 'https://mobile.twitter.com/search?q=' + _text + '&src=typed_query';
-        controller.loadUrl(url);
-      }
-      _text = '';
+      _isEntry = false;
+      var url = 'https://mobile.twitter.com/search?q=' + v + '&src=typed_query';
+      controller.loadUrl(url);
     });
   }
 
