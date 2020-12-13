@@ -8,15 +8,17 @@ class SplashScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Text(
-            "Initialization",
+            "Fast Twitter Search",
             style: TextStyle(
               fontSize: 32,
+              color: Colors.white
             ),
           ),
           SizedBox(height: 20),
           CircularProgressIndicator()
         ],
       ),
+      color: Colors.blue,
     );
   }
 }
