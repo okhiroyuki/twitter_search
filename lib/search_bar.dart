@@ -19,9 +19,7 @@ class _SearchAppBarState extends State<SearchAppBar> {
   FocusNode _focus = new FocusNode();
   final TextEditingController _textEditingController = new TextEditingController();
   WebViewController controller;
-  bool _isVisible = false;
   bool _isEntry = false;
-  // String _city = '';
   Widget appBarTitle = new Text("Twitter Search");
 
   @override
@@ -169,12 +167,12 @@ class _SearchAppBarState extends State<SearchAppBar> {
       ];
     }else{
       return <Widget>[
-        new IconButton(
-          icon: new Icon(Icons.list),
-          onPressed:(){
-            debugPrint("list");
-          },
-        ),
+        // new IconButton(
+        //   icon: new Icon(Icons.list),
+        //   onPressed:(){
+        //     debugPrint("list");
+        //   },
+        // ),
       ];
     }
   }
@@ -191,9 +189,6 @@ class _SearchAppBarState extends State<SearchAppBar> {
           // String jsCode = await rootBundle.loadString('assets/app.js');
           // await controller.evaluateJavascript(jsCode);
         }
-        setState(() {
-          _isVisible = true;
-        });
       },
       navigationDelegate: (NavigationRequest request) {
         // TODO: https://github.com/flutter/flutter/issues/39441

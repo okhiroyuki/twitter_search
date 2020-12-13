@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="Read-only Twitter"
+        android:label="Fast Twitter Search"
         android:icon="@mipmap/launcher_icon"
         android:usesCleartextTraffic="true">
         <activity
