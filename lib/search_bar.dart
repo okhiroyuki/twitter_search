@@ -5,6 +5,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:move_to_background/move_to_background.dart';
 import 'package:share/share.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'ad_manager.dart';
@@ -21,6 +22,7 @@ class _SearchAppBarState extends State<SearchAppBar> {
   WebViewController controller;
   bool _isEntry = false;
   Widget appBarTitle = new Text("Twitter Search");
+  bool _hasUrl = false;
 
   @override
   void initState() {
@@ -65,74 +67,19 @@ class _SearchAppBarState extends State<SearchAppBar> {
           title: _appBarTitle(),
           actions: _appBarActions()
         ),
-        body: Center(
-          child: searchView()
-        ),
-        // floatingActionButton: new Visibility(
-        //   visible: _isVisible,
-        //   child: new FloatingActionButton(
-        //     child: Icon(Icons.share),
-        //     backgroundColor: Colors.red,
-        //     onPressed: () async {
-        //       debugPrint(await controller.currentUrl());
-        //       Share.share(await controller.currentUrl());
-        //     },
-        //   ),
-        // ),
-        // drawer: Drawer(
-        //   child: ListView(
-        //     children: <Widget>[
-        //       DrawerHeader(
-        //         child: Text(
-        //           'My App',
-        //           style: TextStyle(
-        //             fontSize: 24,
-        //             color: Colors.white,
-        //           ),
-        //         ),
-        //         decoration: BoxDecoration(
-        //           color: Colors.blue,
-        //         ),
-        //       ),
-        //       ListTile(
-        //         title: Text('Los Angeles'),
-        //         onTap: () {
-        //           setState(() => _city = 'Los Angeles, CA');
-        //           Navigator.pop(context);
-        //         },
-        //       ),
-        //       ListTile(
-        //         title: Text('Honolulu'),
-        //         onTap: () {
-        //           setState(() => _city = 'Honolulu, HI');
-        //           Navigator.pop(context);
-        //         },
-        //       ),
-        //       ListTile(
-        //         title: Text('Dallas'),
-        //         onTap: () {
-        //           setState(() => _city = 'Dallas, TX');
-        //           Navigator.pop(context);
-        //         },
-        //       ),
-        //       ListTile(
-        //         title: Text('Seattle'),
-        //         onTap: () {
-        //           setState(() => _city = 'Seattle, WA');
-        //           Navigator.pop(context);
-        //         },
-        //       ),
-        //       ListTile(
-        //         title: Text('Tokyo'),
-        //         onTap: () {
-        //           setState(() => _city = 'Tokyo, Japan');
-        //           Navigator.pop(context);
-        //         },
-        //       ),
-        //     ],
-        //   ),
-        // )
+        body: _padding(context)
       )
+    );
+  }
+
+
+  Padding _padding(context){
+    // 下部にAdMob広告を表示するため、スペースを空ける
+    return Padding(
+      child: _webView(),
+      padding: EdgeInsets.only(
+        bottom: AdManager.getAdBannerHeight(context),
+      ),
     );
   }
 
@@ -166,18 +113,39 @@ class _SearchAppBarState extends State<SearchAppBar> {
         ),
       ];
     }else{
-      return <Widget>[
-        // new IconButton(
-        //   icon: new Icon(Icons.list),
-        //   onPressed:(){
-        //     debugPrint("list");
-        //   },
-        // ),
-      ];
+      return _popMenu();
     }
   }
 
-  WebView searchView(){
+  List<Widget> _popMenu() {
+    if (_hasUrl) {
+      return <Widget>[
+        _popupMenuButton()
+      ];
+    } else {
+      return <Widget>[];
+    }
+  }
+
+  PopupMenuButton _popupMenuButton(){
+    return PopupMenuButton<int>(
+        itemBuilder: (BuildContext context) => <PopupMenuItem<int>>[
+          new PopupMenuItem<int>(
+              value: 1, child: new Text('open url')),
+          new PopupMenuItem<int>(
+              value: 2, child: new Text('share')),
+        ],
+        onSelected: (int value) async {
+          String url = await controller.currentUrl();
+          if (value == 1) {
+            await launch(url);
+          } else {
+            Share.share(url);
+          }
+        });
+  }
+
+  WebView _webView(){
     return WebView(
       javascriptMode: JavascriptMode.unrestricted,
       onWebViewCreated: (WebViewController webViewController) {
@@ -202,6 +170,7 @@ class _SearchAppBarState extends State<SearchAppBar> {
     if(v.length == 0) return;
     _textEditingController.clear();
     setState(() async {
+      _hasUrl = true;
       _isEntry = false;
       var url = 'https://mobile.twitter.com/search?q=' + v + '&src=typed_query';
       controller.loadUrl(url);
@@ -227,8 +196,6 @@ class _SearchAppBarState extends State<SearchAppBar> {
           .setCrashlyticsCollectionEnabled(false);
     }
   }
-
-  
 
   Future<void> _showAdBanner() async {
     FirebaseAdMob.instance.initialize(appId:AdManager.appId);
