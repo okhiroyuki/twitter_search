@@ -28,7 +28,7 @@ class _SearchAppBarState extends State<SearchAppBar> {
   void initState() {
     super.initState();
     if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
-    _showAdBanner();
+    // _showAdBanner();
     _initCrashlytics();
     _focus.addListener(_onFocusChange);
   }
@@ -67,21 +67,21 @@ class _SearchAppBarState extends State<SearchAppBar> {
           title: _appBarTitle(),
           actions: _appBarActions()
         ),
-        body: _padding(context)
+        body: _webView()
       )
     );
   }
 
 
-  Padding _padding(context){
-    // 下部にAdMob広告を表示するため、スペースを空ける
-    return Padding(
-      child: _webView(),
-      padding: EdgeInsets.only(
-        bottom: AdManager.getAdBannerHeight(context),
-      ),
-    );
-  }
+  // Padding _padding(context){
+  //   // 下部にAdMob広告を表示するため、スペースを空ける
+  //   return Padding(
+  //     child: _webView(),
+  //     padding: EdgeInsets.only(
+  //       bottom: AdManager.getAdBannerHeight(context),
+  //     ),
+  //   );
+  // }
 
   TextField _appBarTitle(){
     return new TextField(
@@ -158,11 +158,12 @@ class _SearchAppBarState extends State<SearchAppBar> {
           // await controller.evaluateJavascript(jsCode);
         }
       },
-      navigationDelegate: (NavigationRequest request) {
-        // TODO: https://github.com/flutter/flutter/issues/39441
-        debugPrint('allowing navigation to $request');
-        return NavigationDecision.prevent;
-      },
+      // navigationDelegate: (NavigationRequest request) {
+      //   // TODO: https://github.com/flutter/flutter/issues/39441
+      //   debugPrint('allowing navigation to $request');
+      //   if (!request.isForMainFrame) return NavigationDecision.navigate;
+      //   return NavigationDecision.prevent;
+      // },
     );
   }
 
